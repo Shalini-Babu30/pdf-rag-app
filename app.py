@@ -50,9 +50,13 @@ tokenized_chunks = [
 ]
 
 bm25 = BM25Okapi(tokenized_chunks)
-reranker = CrossEncoder(
-    "cross-encoder/ms-marco-MiniLM-L-6-v2"
-)
+@st.cache_resource
+def load_reranker():
+    return CrossEncoder(
+        "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    )
+
+reranker = load_reranker()
 # -----------------------------
 # 3. Create LOCAL embeddings
 # -----------------------------
@@ -83,7 +87,7 @@ st.success("✅ Chroma vector database is ready!")
 @st.cache_resource
 def load_llm():
 
-    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+    model_name = "HuggingFaceTB/SmolLM2-135M-Instruct"
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
