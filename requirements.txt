@@ -10,3 +10,4 @@ sentence-transformers
 transformers
 accelerate
 torch
+rank-bm25
