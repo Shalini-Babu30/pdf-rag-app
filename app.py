@@ -61,21 +61,29 @@ reranker = load_reranker()
 # 3. Create LOCAL embeddings
 # -----------------------------
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    model_kwargs={"device": "cpu"},
-    encode_kwargs={"normalize_embeddings": True}
-)
+@st.cache_resource
+def load_embeddings():
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True}
+    )
+
+embeddings = load_embeddings()
 
 # -----------------------------
 # 4. Create Chroma vector DB
 # -----------------------------
 
-vector_db = Chroma.from_documents(
-    documents=chunks,
-    embedding=embeddings,
-    persist_directory="./rbi_chroma_db_v2"
-)
+@st.cache_resource
+def load_vector_db(_chunks, _embeddings):
+    return Chroma.from_documents(
+        documents=_chunks,
+        embedding=_embeddings,
+        persist_directory="./rbi_chroma_db_v2"
+    )
+
+vector_db = load_vector_db(chunks, embeddings)
 
 st.success("✅ Local embeddings created!")
 st.success("✅ Chroma vector database is ready!")
