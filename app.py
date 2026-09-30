@@ -153,53 +153,54 @@ if question:
 # Rerank the retrieved candidates
 # -----------------------------
 
-candidate_docs = []
+    # 5. Select top results
+    # -----------------------------
+    # Rerank the retrieved candidates
+    # -----------------------------
 
-for content in ranked_contents[:10]:
-    for doc in chunks:
-        if doc.page_content == content:
-            candidate_docs.append(doc)
-            break
+    candidate_docs = []
 
-pairs = [
-    (question, doc.page_content)
-    for doc in candidate_docs
-]
+    for content in ranked_contents[:10]:
+        for doc in chunks:
+            if doc.page_content == content:
+                candidate_docs.append(doc)
+                break
 
-scores = reranker.predict(pairs)
+    pairs = [
+        (question, doc.page_content)
+        for doc in candidate_docs
+    ]
 
-reranked = sorted(
-    zip(candidate_docs, scores),
-    key=lambda x: x[1],
-    reverse=True
-)
+    scores = reranker.predict(pairs)
 
-results = [
-    doc for doc, score in reranked[:5]
-]
+    reranked = sorted(
+        zip(candidate_docs, scores),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    results = [
+        doc for doc, score in reranked[:5]
+    ]
 
     # 6. Create context
-context = "\n\n".join(
-    doc.page_content for doc in results
-)
+    context = "\n\n".join(
+        doc.page_content for doc in results
+    )
 
     # 7. Display retrieved information
-st.subheader("🔎 Retrieved Information")
-st.write(context)
+    st.subheader("🔎 Retrieved Information")
+    st.write(context)
 
-    # -----------------------------
-    # 7. Generate an answer
-    # -----------------------------
-# -----------------------------
-# Generate Answer
-# -----------------------------
-context = "\n\n".join(
-    doc.page_content for doc in results
-)
-messages = [
-    {
-        "role": "system",
-        "content": """
+    # 8. Generate an answer
+    context = "\n\n".join(
+        doc.page_content for doc in results
+    )
+
+    messages = [
+        {
+            "role": "system",
+            "content": """
 You are an RBI regulatory information assistant.
 
 Answer the user's question using ONLY the provided context.
@@ -211,10 +212,10 @@ Rules:
 - If the answer is a list, include all items that are explicitly supported by the context.
 - Give a direct answer.
 """
-    },
-    {
-        "role": "user",
-        "content": f"""
+        },
+        {
+            "role": "user",
+            "content": f"""
 Question:
 {question}
 
@@ -223,35 +224,35 @@ Context:
 
 Answer the question directly and completely.
 """
-    }
-]
+        }
+    ]
 
-prompt = tokenizer.apply_chat_template(
-    messages,
-    tokenize=False,
-    add_generation_prompt=True
-)
-
-inputs = tokenizer(
-    prompt,
-    return_tensors="pt"
-)
-
-with torch.no_grad():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=150,
-        do_sample=False
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True
     )
 
-generated_tokens = outputs[0][
-    inputs["input_ids"].shape[1]:
-]
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt"
+    )
 
-answer = tokenizer.decode(
-    generated_tokens,
-    skip_special_tokens=True
-)
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=150,
+            do_sample=False
+        )
 
-st.subheader("🤖 Answer")
-st.write(answer)
+    generated_tokens = outputs[0][
+        inputs["input_ids"].shape[1]:
+    ]
+
+    answer = tokenizer.decode(
+        generated_tokens,
+        skip_special_tokens=True
+    )
+
+    st.subheader("🤖 Answer")
+    st.write(answer)
