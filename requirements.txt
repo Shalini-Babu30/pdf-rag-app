@@ -10,4 +10,5 @@ sentence-transformers
 transformers
 accelerate
 torch
+torchvision
 rank-bm25
